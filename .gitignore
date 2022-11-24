@@ -1,3 +1,8 @@
+data/processed/camcog/*.parquet
+data/processed/garmin/*.parquet
+data/processed/oura/*.parquet
+data/processed/survey/*.parquet
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,7 +1,15 @@
-data/processed/camcog/*.parquet
-data/processed/garmin/*.parquet
-data/processed/oura/*.parquet
-data/processed/survey/*.parquet
+#Data
+data/processed/.ipynb_checkpoints/
+data/processed/camcog/*
+data/processed/garmin/*
+data/processed/oura/*
+data/processed/survey/*
+
+#experiments
+experiments/ipynb_checkpoints/
+experiments/checkpoint/*
+experiments/logs/*
+experiments/*.out
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

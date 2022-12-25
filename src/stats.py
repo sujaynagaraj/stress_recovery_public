@@ -1130,3 +1130,188 @@ def individual_graph_reference(df, features, method, stress_window, stress_cutof
                 dict_features[p] = p_features
                     
     return dict_reference, dict_models, dict_features
+
+
+def individual_graph_reference2(df, features, method, stress_window, stress_cutoff, no_stress_cutoff, bootstraps,buffer, missing_node=0,max_cond_vars=2, significance_level = 0.05):
+    cutoff = 10
+
+            #DROP THE STRESS WINDOW FROM FEATURES
+    if stress_window in features:
+        features.remove(stress_window)
+
+    if stress_window == "total_stress":
+        for i in ["daily_stressed", "daily_control", "shift_stress"]:
+            if i in features:
+                features.remove(i)
+    
+    #if stress_window == "any_stress":
+    #    for i in ["daily_stressed", "daily_shifts", "shift_stress"]:
+    #        if i in features:
+    #            features.remove(i)
+
+    #if stress_window == "shift_stress":
+    #    if "daily_shifts" in features:
+    #        features.remove("daily_shifts")
+
+    if stress_window == "daily_control" or stress_window == "control_cat":
+        if "daily_stressed" in features:
+            features.remove("daily_stressed")
+
+    if 'steps' in features:
+        df = load_garmin_subset()
+
+    participant_list = df.participant_id.unique().tolist()
+
+    dict_models = {}
+    dict_reference = {}
+    dict_features = {}
+
+    if missing_node == 1:
+        features = features + ["missingness"]
+
+    for p in tqdm(participant_list):
+            ##Grab an individual
+        p_features = features.copy()
+        df1 = fetch_participant_df(df, p)
+
+        if len(df1)<cutoff:
+            continue
+
+        count_flag = 0
+        for feature in features:
+            if df1[feature].nunique() <2:
+                p_features.remove(feature)
+
+        #Add missing rows
+        df1 = missing_rows(df1)
+
+        if missing_node == 1:
+            #Add missingness node
+            df1["missingness"] = df1.isnull().astype(bool).sum(axis=1)
+
+
+        #Z Score Normalize
+        df1 = z_score(df1, p_features)
+
+        #interpolate missing values
+        df1 = lin_interp_multiple(df1, p_features)
+
+        #if anything still missing, fill with column mean
+        df1[p_features] = df1[p_features].fillna(df1[p_features].mean())
+        
+        #BACKFILL PPE and COVID EXPOSURE
+        if stress_window == "covid_past_24" or stress_window == "ppe_6":
+            df1[stress_window] = df1[stress_window].bfill(limit=7)
+
+        #Pad Stress Windows with a buffer
+        #df1 = pad_stress(df1, buffer, stress_window)
+
+
+        if stress_window == "total_stress":
+            df1 = total_stress_binarize(df1, stress_cutoff, no_stress_cutoff)
+        elif stress_window == "daily_control":
+            df1 = daily_control_binarize(df1, stress_cutoff, no_stress_cutoff)
+        elif stress_window == "control_cat":
+            df1 = control_cat_binarize(df1, stress_cutoff, no_stress_cutoff)
+        elif stress_window == "ppe_6":
+            df1 = ppe_binarize(df1, stress_cutoff, no_stress_cutoff)
+        elif stress_window == "pss4_score":
+            df1 = pss4_binarize(df1, stress_cutoff, no_stress_cutoff)
+        elif stress_window == "hrv_binary":
+            df1 = hrv_binarize(df1, stress_cutoff, no_stress_cutoff)
+        elif stress_window == "any_stress":
+            df1 = hrv_binarize(df1, stress_cutoff, no_stress_cutoff)
+            df1 = any_stress(df1)
+            
+        
+        #df_nostress, df_stress = iid_windows(df1, buffer, p_features, stress_window)
+
+        #GET NUMBER OF WINDOWS TO SAMPLE
+        #num_stress = len(df_stress)
+        #num_nostress = len(df_nostress)
+        #num_sample = min(num_stress, num_nostress)
+        
+        
+        num_sample = 10
+        
+        dict_reference[p] = []
+        dict_models[p] =[]
+
+        for i in range(bootstraps):
+            df_nostress, df_stress = iid_windows(df1, buffer, p_features, stress_window)
+            if len(df1)>=cutoff and len(df_nostress)>=cutoff and len(df_stress)>=cutoff:
+            
+                #REFERENCE GRAPHS - RANDOMPLY SAMPLED w/ SAME PROPORTIONS
+                #COPY DATA AS WE WILL DROP ROWS AFTER SAMPLING
+                df_copy = df1.copy()
+
+                #SAMPLE A AND REMOVE
+                df_a = df_copy.sample(num_sample)
+                #df_copy = df_copy.drop(df_a.index)
+
+                #SAMPLE B FROM REMAINING ROWS
+                df_b = df_copy.sample(num_sample)
+                
+                if len(df_a)>=cutoff and len(df_b)>=cutoff:
+                    data_a = df_a[p_features]
+                    data_a = data_a.interpolate().dropna()
+                    c = PC(data_a)
+                    if method == "CCIT":
+                        model = c.estimate(ci_test = CCIT_test, max_cond_vars=max_cond_vars, significance_level=significance_level)
+                    else:
+                        model = c.estimate(ci_test = "pearsonr", variant = "parallel", max_cond_vars=max_cond_vars, significance_level=significance_level)
+
+                    weighted_model = add_weights(model,df_a)
+                    dict_reference[p].append(("a",weighted_model))
+                    #print("No Stress")
+                    #print(model.edges())
+
+                    data_b = df_b[p_features]
+                    data_b = data_b.interpolate().dropna()
+                    c = PC(data_b)
+                    if method == "CCIT":
+                        model = c.estimate(ci_test = CCIT_test, max_cond_vars=max_cond_vars, significance_level=significance_level)
+                    else:
+                        model = c.estimate(ci_test = "pearsonr", variant = "parallel", max_cond_vars=max_cond_vars, significance_level=significance_level)
+                    weighted_model = add_weights(model,df_b)
+                    dict_reference[p].append (("b",weighted_model))
+                    #print("Stress")
+                    #print(model.edges())
+
+                #GET STRESS / NON STRESS WINDOWS
+
+                #SAMPLE STRESS 
+                df_stress_sample = df_stress.sample(num_sample)
+
+                #SAMPLE NO STRESS
+                df_nostress_sample = df_nostress.sample(num_sample)
+
+
+                if len(df_nostress_sample)>=cutoff and len(df_stress_sample)>=cutoff:
+                    data_nostress = df_nostress_sample[p_features]
+                    data_nostress = data_nostress.interpolate().dropna()
+                    c = PC(data_nostress)
+                    if method == "CCIT":
+                        model = c.estimate(ci_test = CCIT_test, max_cond_vars=max_cond_vars, significance_level=significance_level)
+                    else:
+                        model = c.estimate(ci_test = "pearsonr", variant = "parallel", max_cond_vars=max_cond_vars, significance_level=significance_level)
+
+                    weighted_model = add_weights(model,df_nostress_sample)
+                    dict_models[p].append(("no_stress",weighted_model))
+                    #print("No Stress")
+                    #print(model.edges())
+
+                    data_stress = df_stress_sample[p_features]
+                    data_stress = data_stress.interpolate().dropna()
+                    c = PC(data_stress)
+                    if method == "CCIT":
+                        model = c.estimate(ci_test = CCIT_test, max_cond_vars=max_cond_vars, significance_level=significance_level)
+                    else:
+                        model = c.estimate(ci_test = "pearsonr", variant = "parallel", max_cond_vars=max_cond_vars, significance_level=significance_level)
+                    weighted_model = add_weights(model,df_stress_sample)
+                    dict_models[p].append (("stress",weighted_model))
+                    #print("Stress")
+                    #print(model.edges())
+                    dict_features[p] = p_features
+                    
+    return dict_reference, dict_models, dict_features

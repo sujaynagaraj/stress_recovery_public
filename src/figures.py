@@ -110,9 +110,7 @@ def rename_nodes2(nodes):
     return [dict_rename[node] for node in nodes]
     
 def get_df(stress_definition):
-    parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-    path = os.path.join(parent_dir, "results", "PC",'reference', args.stress_window)
-    with open(path+"/results_df.pkl", 'rb') as f:
+    with open("/h/snagaraj/SRfingers/results/PC/reference/"+stress_definition+"/results_df.pkl", 'rb') as f:
         df  = pickle.load(f)
     return df
 
@@ -154,9 +152,9 @@ def df_unique_duration(df, threshold):
 
 
 
-def survey_completeness(DATAPATH, survey, freq):
-    #DATAPATH = "//h/snagaraj/Vaughan/datasets/stressrecov"
-    EXTENSION = "/surveys_and_active_tasks/"
+def survey_completeness(survey, freq):
+    DATAPATH = "//h/snagaraj/Vaughan/datasets/stressrecov/"
+    EXTENSION = "surveys_and_active_tasks/"
     
     dfs = {}
     for NAME in survey:
@@ -189,9 +187,9 @@ def survey_completeness(DATAPATH, survey, freq):
         print("\tAvg fraction of days complete: ", np.mean(vals))
         print("\tStd fraction of days complete: ", np.std(vals))
         
-def survey_completeness_once(DATAPATH):
-    #DATAPATH = "//h/snagaraj/Vaughan/datasets/stressrecov"
-    EXTENSION = "/surveys_and_active_tasks/"
+def survey_completeness_once():
+    DATAPATH = "//h/snagaraj/Vaughan/datasets/stressrecov/"
+    EXTENSION = "surveys_and_active_tasks/"
     
     dfs = {}
     survey = [ 'participants.csv.gz',"demographics_survey.csv.gz","baseline_covid19_risk.csv.gz", "medical_history.csv.gz", "family_factors.csv.gz",
@@ -315,4 +313,3 @@ def plot_6_hrxhrv(df):
     fig.supylabel("Log HRV")
     fig.supxlabel('HR')
     plt.tight_layout()
-            

@@ -33,13 +33,23 @@ parser.add_argument('--significance_level', type=float, default=0.05, help="sign
 args = parser.parse_args()
 
 
+#python3 -u run_PC_individual.py --features all --method pearsonr --max_cond_vars 2 --significance_level 0.05
+
 #####################################################################################################
 
 
 if __name__ == '__main__':
 
+    #experimentID = args.load
+    #if experimentID is None:
+        # Make a new experiment ID
+    #    experimentID = int(SystemRandom().random()*100000)
 
     start = time.time()
+
+        #check for checkpoint / preemption
+    #if not os.path.exists(args.save):
+    #    os.makedirs(args.save)
 
     print("Running PC at Individual-level...")
     print("Features: ", args.features)
@@ -82,7 +92,7 @@ if __name__ == '__main__':
     #load Data
     df = load_merge_all()
     #fit model
-    dict_reference, dict_stress, dict_features = individual_graph_reference2(df, 
+    dict_reference_man, dict_stress_man, dict_features_man = individual_graph_reference3(df, 
                                 features, 
                                 args.method, 
                                 args.stress_window,
@@ -94,6 +104,16 @@ if __name__ == '__main__':
                                 max_cond_vars=args.max_cond_vars, 
                                 significance_level = args.significance_level)
 
+    
+    dict_reference = {}
+    for key in dict_reference_man.keys():
+        dict_reference[key] = dict_reference_man[key]
+    dict_stress = {}
+    for key in dict_stress_man.keys():
+        dict_stress[key] = dict_stress_man[key]
+    dict_features = {}
+    for key in dict_features_man.keys():
+        dict_features[key] = dict_features_man[key]
     ##################################################################
     # Saving Val and Test set results
     method_folder = args.method
@@ -110,3 +130,4 @@ if __name__ == '__main__':
     #get a list of tuples from the model and save
     with open(result_path, 'wb') as fp:
         pickle.dump([dict_reference, dict_stress, dict_features], fp)
+    print("DONE")

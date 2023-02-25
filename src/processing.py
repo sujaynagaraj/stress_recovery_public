@@ -323,37 +323,47 @@ def iid_windows(df, window, p_features, stress_label):
     df_empty_nostress = pd.DataFrame()
     df_empty_stress = pd.DataFrame()
     
-    while i < len(df)-1:
+    while i <= len(df)-1:
         growing_window = 1
-
-        while df.iloc[i][stress_label] == df.iloc[i+growing_window][stress_label] and df.iloc[i][stress_label] in [0.0,1.0, 2.0] and i+growing_window<len(df)-1:
-            growing_window +=1
-
-        if growing_window ==1:
+        if i == len(df)-1:
             if df.iloc[i][stress_label] == 0.0:
-                df_empty_nostress= df_empty_nostress.append(df[i:i+growing_window][p_features], ignore_index=True)
+                df_empty_nostress= df_empty_nostress.append(df.iloc[i][p_features], ignore_index=True)
             elif df.iloc[i][stress_label] == 1.0 or df.iloc[i][stress_label] == 2.0: #FOR DAILY SHIFT LABEL AS IT CAN be 2
 
-                df_empty_stress= df_empty_stress.append(df[i:i+growing_window][p_features], ignore_index=True)
-            i=i+growing_window
-        elif 2<=growing_window<=window:
-            if df.iloc[i][stress_label] == 0.0:
-                df_empty_nostress= df_empty_nostress.append(df[i:i+growing_window][p_features].mean(axis=0).to_frame().T, ignore_index=True)
-            elif df.iloc[i][stress_label] == 1.0 or df.iloc[i][stress_label] == 2.0:
+                df_empty_stress= df_empty_stress.append(df.iloc[i][p_features], ignore_index=True)
+            i=i+1
+        else:
+        
+            while df.iloc[i][stress_label] == df.iloc[i+growing_window][stress_label] and df.iloc[i][stress_label] in [0.0,1.0, 2.0] and i+growing_window<len(df)-1:
+                growing_window +=1
+            if growing_window ==1:
+                if df.iloc[i][stress_label] == 0.0:
+                    df_empty_nostress= df_empty_nostress.append(df[i:i+growing_window][p_features], ignore_index=True)
+                elif df.iloc[i][stress_label] == 1.0 or df.iloc[i][stress_label] == 2.0: #FOR DAILY SHIFT LABEL AS IT CAN be 2
 
-                df_empty_stress= df_empty_stress.append(df[i:i+growing_window][p_features].mean(axis=0).to_frame().T, ignore_index=True)
-            i=i+growing_window
-        elif growing_window>window:
+                    df_empty_stress= df_empty_stress.append(df[i:i+growing_window][p_features], ignore_index=True)
+                i=i+growing_window
+            elif 2<=growing_window<=window:
+                if df.iloc[i][stress_label] == 0.0:
+                    df_empty_nostress= df_empty_nostress.append(df[i:i+growing_window][p_features].mean(axis=0).to_frame().T, ignore_index=True)
+                elif df.iloc[i][stress_label] == 1.0 or df.iloc[i][stress_label] == 2.0:
 
-            df_sample = df[i:i+growing_window].sample(n=window)
+                    df_empty_stress= df_empty_stress.append(df[i:i+growing_window][p_features].mean(axis=0).to_frame().T, ignore_index=True)
+                i=i+growing_window
+            elif growing_window>window:
 
-            if df.iloc[i][stress_label] == 0.0:
-                df_empty_nostress=df_empty_nostress.append(df_sample[p_features], ignore_index=True)
-            elif df.iloc[i][stress_label] == 1.0 or df.iloc[i][stress_label] == 2.0:
+                #OLD 
+                #df_sample = df[i:i+growing_window].sample(n=window)
+                #print(growing_window//2)
+                df_sample = df[i:i+growing_window].sample(n=growing_window//2)
 
-                df_empty_stress=df_empty_stress.append(df_sample[p_features], ignore_index=True)
-            i=i+growing_window
-    
+                if df.iloc[i][stress_label] == 0.0:
+                    df_empty_nostress=df_empty_nostress.append(df_sample[p_features], ignore_index=True)
+                elif df.iloc[i][stress_label] == 1.0 or df.iloc[i][stress_label] == 2.0:
+
+                    df_empty_stress=df_empty_stress.append(df_sample[p_features], ignore_index=True)
+                i=i+growing_window
+        #print(growing_window)
     return df_empty_nostress, df_empty_stress
 
 

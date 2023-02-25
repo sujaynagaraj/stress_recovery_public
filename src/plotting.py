@@ -965,7 +965,10 @@ def compute_int_union(a,b):
     intersection = intersection_edges(a,b)
     union = union_edges(a,b)
     
-    return len(intersection)/len(union)
+    if len(union)!=0:
+        return len(intersection)/len(union)
+    else:
+        return 0
   
 #a-b is the order
 def intersection_weight_diff(a,b):
@@ -1012,8 +1015,10 @@ def compare_reference(dict_reference, dict_models, features, stress_definition):
             "between_survey", "between_modality", "between_phys", "between_sleep", "between_mental", "between_phys_sleep",
             "between_phys_mental", "between_sleep_mental"]
 
-    keys = [value for value in stress_keys if value in no_stress_keys]  
+    keys = [value for value in stress_keys if value in no_stress_keys]
+
     for key in tqdm(keys):
+        print(len(stress[key]), len(no_stress[key]))
         if len(stress[key])!=0 and len(no_stress[key])!=0:
             for x, y in zip(stress[key], no_stress[key]):
                 for feature in features:

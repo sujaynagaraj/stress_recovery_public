@@ -33,7 +33,7 @@ def worker_func_results(stress_definition, oura, surveys):
     filename_a = os.path.join(parent_dir, "results", "PC","reference", stress_definition)
     filename_b = "_window_"+stress_definition+"_0.75_0.25_bootstraps_100_buffer_3_miss_0_mcv_2_sig_0.05_pearsonr.pkl"
     
-    oura_surveys_reference = filename_a+"oura+surveys"+filename_b   
+    oura_surveys_reference = filename_a+"/oura+surveys"+filename_b   
     print(oura_surveys_reference)
     with open(oura_surveys_reference, 'rb') as f:
         dict_reference,dict_models, dict_features  = pickle.load(f)

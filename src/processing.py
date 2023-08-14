@@ -13,18 +13,18 @@ from pgmpy.base import DAG
 
 #load saved sleep data from ~/SRfingers/data/processed/oura/
 def load_sleep():
-    sleep_df = pd.read_parquet("~/SRfingers/data/processed/oura/sleep_concat.parquet")
+    sleep_df = pd.read_parquet("~/stress_recovery_public/data/processed/oura/sleep_concat.parquet")
     sleep_df['date']=sleep_df['summary_date'].astype(str) 
 
     return sleep_df
 
 def load_once():
-    once_merged = pd.read_parquet("~/stressrecovery/data/processed/survey/once_merged.parquet")
+    once_merged = pd.read_parquet("~/stress_recovery_public/data/processed/survey/once_merged.parquet")
     return once_merged
 
 #Load Daily
 def load_daily():
-    daily_merged = pd.read_parquet("~/stressrecovery/data/processed/survey/daily_merged.parquet")
+    daily_merged = pd.read_parquet("~/stress_recovery_public/data/processed/survey/daily_merged.parquet")
     daily_merged['date']=daily_merged['date'].astype(str) 
 
     daily_merged["covid_shift_any"] = daily_merged.apply (lambda row: (row.daily_covid_shifts___1 or row.daily_covid_shifts___2 or row.daily_covid_shifts___3 ), axis=1)
@@ -35,30 +35,30 @@ def load_daily():
 
 #Load Weekly
 def load_weekly():
-    weekly_merged = pd.read_parquet("~/stressrecovery/data/processed/survey/weekly_merged.parquet")
+    weekly_merged = pd.read_parquet("~/stress_recovery_public/data/processed/survey/weekly_merged.parquet")
     weekly_merged['date']=weekly_merged['date'].astype(str)
     return weekly_merged 
 
 #Load BiWeekly
 def load_biweekly():
-    biweekly_merged = pd.read_parquet("~/stressrecovery/data/processed/survey/biweekly_merged.parquet")
+    biweekly_merged = pd.read_parquet("~/stress_recovery_public/data/processed/survey/biweekly_merged.parquet")
     biweekly_merged['date']=biweekly_merged['date'].astype(str) 
     return biweekly_merged
 
 #Load Monthly
 def load_monthly():
-    monthly_merged = pd.read_parquet("~/stressrecovery/data/processed/survey/monthly_merged.parquet")
+    monthly_merged = pd.read_parquet("~/stress_recovery_public/data/processed/survey/monthly_merged.parquet")
     monthly_merged['date']=monthly_merged['date'].astype(str) 
     return monthly_merged
 
 #Load EBT
 def load_ebt():
-    ebt = pd.read_parquet("~/stressrecovery/data/processed/camcog/ebt.parquet")
+    ebt = pd.read_parquet("~/stress_recovery_public/data/processed/camcog/ebt.parquet")
     ebt['date']=ebt['date'].astype(str)
     return ebt
 
 def load_garmin_daily():
-    garmin_dailies = pd.read_parquet("~/stressrecovery/data/processed/garmin/garmin_dailies.parquet")
+    garmin_dailies = pd.read_parquet("~/stress_recovery_public/data/processed/garmin/garmin_dailies.parquet")
     garmin_dailies['date']=garmin_dailies['summary_date'].astype(str)   
     return garmin_dailies
 
@@ -216,7 +216,7 @@ def load_sleep_daily():
     return df_final
 
 def load_once_complete():
-    df_final = pd.read_parquet("~/stressrecovery/data/processed/survey/once_merged.parquet")
+    df_final = pd.read_parquet("~/stress_recovery_public/data/processed/survey/once_merged.parquet")
 
     df_final["ace_score"] = df_final.apply (lambda row: row.ace_1 + row.ace_2 + row.ace_3 + row.ace_4 + row.ace_5 + row.ace_6 + row.ace_7 + row.ace_8 + row.ace_9 + row.ace_10, axis=1)
     df_final["ptsd_score"] = df_final.apply (lambda row: row.pcl_1 + row.pcl_2 + row.pcl_3 + row.pcl_4 + row.pcl_5 + row.pcl_6 + row.pcl_7 + row.pcl_8 + row.pcl_9 + row.pcl_10 + row.pcl_11 + row.pcl_12 + row.pcl_13 + row.pcl_14 + row.pcl_15 + row.pcl_16 + row.pcl_17, axis=1)

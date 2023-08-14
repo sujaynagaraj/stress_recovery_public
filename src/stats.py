@@ -235,12 +235,6 @@ def CCIT_test(X, Y, Z, data, boolean=True, **kwargs):
 
 
 
-    
-
-
-
-
-
 
 def worker_func(p,dict_models,dict_reference, dict_features, df,features, method, stress_window, stress_cutoff, 
                 no_stress_cutoff, bootstraps, buffer, missing_node, max_cond_vars, significance_level):
